@@ -23,19 +23,35 @@ if [[ "$agreement" != 1 ]]; then
 	exit
 fi
 
+echo ""
 echo "1. 💾 Backup your tweaks"
 echo "2. 🛠 Restore your tweaks"
-echo "🧱 Anything else to close out of the script."
+echo "*. 🧱 Anything else to close out of the script."
 
 read -p '> ' option
+echo ""
 
 backup='/private/var/mobile/Documents/TweaksBackup.txt'
 
 if [[ "$option" == 1 ]]; then
-	rm "$destination" 2> /dev/null
+	if [[ -f "$backup" ]]; then
+    	echo "🛑 You already have a backup of your tweaks. Do you really want to continue? 🛑"
+    	printf "1. ✅ Continue - ⚠️ ${red}Will overwrite the file${clear} ⚠️\n"
+		echo "*. ❓ Anything else - Will exit the program"
+		read -p '> ' continue
+		echo ""
+		if [[ "$continue" != 1 ]]; then
+			echo "✅ You have decided to exit the program. Your backup has not been modified."
+			exit
+		fi
+		printf "🛑 You have decided to ${red}continue${clear}. Your backup will be deleted 🛑\n"
+    	rm "$destination" 2> /dev/null
+	fi
 	dpkg -l | grep -v '^rc\|gsc\|cy+' | cut -d ' ' -f 3 | sed 1,5d > "$backup" # https://www.reddit.com/comments/3xuiuk/1/cy7z2qs
 	echo "✅ Your file has been saved at the location $backup (inside of your Documents folder)."
 else
+	# Let's update the repositories
+	apt-get update
 	# We need gawk to use the "awk" command
 	if [ $(dpkg-query -W -f='${Status}' gawk 2>/dev/null | grep -c "ok installed") -eq 0 ];
 	then
